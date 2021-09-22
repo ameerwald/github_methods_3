@@ -1,7 +1,7 @@
 ---
 title: "practical_exercise_2, Methods 3, 2021, autumn semester"
-author: '[FILL IN YOUR NAME]'
-date: "[FILL IN THE DATE]"
+author: 'Anja M'
+date: "22/9/21"
 output: pdf_document
 ---
 
@@ -37,12 +37,68 @@ REMEMBER: This assignment will be part of your final portfolio
 ## Exercise 1 - describing the dataset and making some initial plots
 
 1) Describe the dataset, such that someone who happened upon this dataset could understand the variables and what they contain  
+
+Subject = participant 
+Gender = gender (sex)
+scenario = condition (ie. apologizing for being late, asking a professor for an extension on an assignment, etc.)
+Attitude = informal or formal (polite) conditions
+Total_duration = of sentence/saying, in seconds
+f0mn = minimum of the f0 (some vocal thing??)
+hiss_count = adudible and nasal hissing in between talking 
+
     i. Also consider whether any of the variables in _politeness_ should be encoded as factors or have the factor encoding removed. Hint: ```?factor```  
+```{r}
+glimpse(politeness)
+
+politeness <- politeness %>% 
+  mutate(
+    gender = as.factor(gender),
+    attitude = as.factor(attitude),
+    subject = as.factor(subject)
+)
+```
+    
 2) Create a new data frame that just contains the subject _F1_ and run two linear models; one that expresses _f0mn_ as dependent on _scenario_ as an integer; and one that expresses _f0mn_ as dependent on _scenario_ encoded as a factor  
     i. Include the model matrices, $X$ from the General Linear Model, for these two models in your report and describe the different interpretations of _scenario_ that these entail
+      The integer matrix shows that in each scenario there is a "data point" for each scenario 
     ii. Which coding of _scenario_, as a factor or not, is more fitting?
+      The as.factor coding is more fitting. 
+    
+```{r}
+politeness_f1 <- politeness %>% 
+  filter(subject == "F1")
+
+# Model showing f0mn as predicted by scenario as an integer
+model1 <- lm(f0mn ~ scenario, data = politeness_f1)
+model1  
+
+# Mutate scenario as factor in another data frame
+politeness_f1_factor <- politeness_f1 %>% 
+  mutate(scenario = as.factor(scenario))
+
+# Same model but now scenario is a factor 
+model2 <- lm(f0mn ~ scenario, data = politeness_f1_factor)
+model2
+
+# Matrices using both the models 
+X <- model.matrix(model1)
+X2 <- model.matrix(model2)
+X
+X2
+
+```
+
+
 3) Make a plot that includes a subplot for each subject that has _scenario_ on the x-axis and _f0mn_ on the y-axis and where points are colour coded according to _attitude_
     i. Describe the differences between subjects
+    
+```{r}
+ggplot(data = politeness, aes(x = scenario, y = f0mn, color = attitude)) +
+  geom_point() +
+  facet_wrap(~ subject)
+
+```
+
     
 ## Exercise 2  - comparison of models
 
@@ -51,19 +107,74 @@ You can install it using `install.packages("lme4")` and load it using `library(l
 `lmer` is used for multilevel modelling
 
 ```{r, eval=FALSE}
-mixed.model <- lmer(formula=..., data=...)
-example.formula <- formula(dep.variable ~ first.level.variable + (1 | second.level.variable))
+install.packages("lme4")
+pacman::p_load("MuMIn")
+library(lme4, tidyverse)
+#mixed.model <- lmer(formula=..., data=...)
+#example.formula <- formula(dep.variable ~ first.level.variable + (1 | second.level.variable))
+
 ```
 
 1) Build four models and do some comparisons
     i. a single level model that models _f0mn_ as dependent on _gender_
+```{r}
+# single level model - f0mn as dependent on gender
+m1 <- lm(f0mn ~ gender, data = politeness)
+m1
+```
+    
     ii. a two-level model that adds a second level on top of i. where unique intercepts are modelled for each _scenario_
+```{r}
+m2 <- lmer(f0mn ~ gender + (1|scenario), data = politeness)
+m2
+```
+
     iii. a two-level model that only has _subject_ as an intercept 
+```{r}
+m3 <- lmer(f0mn ~ gender + (1|subject), data = politeness)
+m3 
+```
+
     iv. a two-level model that models intercepts for both _scenario_ and _subject_
+```{r}
+m4 <- lmer(f0mn ~ gender + (1|subject) + (1|scenario), data = politeness)
+m4
+```
+
     v. which of the models has the lowest residual standard deviation, also compare the Akaike Information Criterion `AIC`?
+```{r}
+#Showing the residual standard deviation of each model 
+sigma(m1)
+
+# Combining the residual standard deviation's into one table 
+SD_comparison <- cbind(sigma(m1), sigma(m2), sigma(m3), sigma(m4)) 
+SD_comparison
+
+# Getting the AIC for each model 
+AIC(logLik(m1))
+
+# Combinging the AIC's of all the models into one table
+AIC_comparison <- cbind(AIC(logLik(m1)), AIC(logLik(m2)), AIC(logLik(m3)), AIC(logLik(m4))) 
+AIC_comparison
+```
+
     vi. which of the second-level effects explains the most variance?
+```{r}
+
+r.squaredGLMM(m1)
+
+r_squared_comparison <- cbind(r.squaredGLMM(m1), r.squaredGLMM(m2), r.squaredGLMM(m3), r.squaredGLMM(m4)) 
+r_squared_comparison
+```
+
 2) Why is our single-level model bad?
     i. create a new data frame that has three variables, _subject_, _gender_ and _f0mn_, where _f0mn_ is the average of all responses of each subject, i.e. averaging across _attitude_ and_scenario_
+```{r}
+twoi <- politeness %>% 
+  group_by(subject, gender) %>% 
+  summarise(mean(f0mn))
+```
+
     ii. build a single-level model that models _f0mn_ as dependent on _gender_ using this new dataset
     iii. make Quantile-Quantile plots, comparing theoretical quantiles to the sample quantiles) using `qqnorm` and `qqline` for the new single-level model and compare it to the old single-level model (from 1).i). Which model's residuals ($\epsilon$) fulfil the assumptions of the General Linear Model better?)
     iv. Also make a quantile-quantile plot for the residuals of the  multilevel model with two intercepts. Does it look alright?

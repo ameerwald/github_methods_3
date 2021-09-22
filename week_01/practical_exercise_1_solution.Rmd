@@ -328,15 +328,10 @@ plot(mtcars$wt, estimated_y_logm)
 # this is the plot based on the fitted values...
 plot(mtcars$wt, estimated_y_logm, xlim=c(0,7))
 
+
+# we've identified the coeffiences but are unusre how to plot the function based on them 
 logistic.model$coefficients
 
-ggplot(mtcars, aes(wt,am))+
-  geom_point(aes(colour=estimated_y))+
-  xlim(0,7)+
-  stat_smooth(method="glm", se=FALSE, method.args = list(family=binomial))+
-  labs(x='wt', y='am', title = "Logistic Model: Sigmoid Function")+
-  theme_bw()+
-  theme(plot.title = element_text(hjust = 0.5))
 ```
 
     i. what's the interpretation of the estimated $\hat{\beta}_0$ (the _Intercept_)
