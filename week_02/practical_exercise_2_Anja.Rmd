@@ -13,6 +13,11 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+install.packages("lme4")
+#pacman::p_load("MuMIn")
+library(lme4, tidyverse, MuMIn)
+pacman::p_load(tidyverse)
 ```
 
 # Assignment 1: Using mixed effects modelling to model hierarchical data
@@ -107,9 +112,6 @@ You can install it using `install.packages("lme4")` and load it using `library(l
 `lmer` is used for multilevel modelling
 
 ```{r, eval=FALSE}
-install.packages("lme4")
-pacman::p_load("MuMIn")
-library(lme4, tidyverse)
 #mixed.model <- lmer(formula=..., data=...)
 #example.formula <- formula(dep.variable ~ first.level.variable + (1 | second.level.variable))
 
@@ -172,14 +174,45 @@ r_squared_comparison
 ```{r}
 twoi <- politeness %>% 
   group_by(subject, gender) %>% 
-  summarise(mean(f0mn))
+  summarise(mean_f0mn = mean(f0mn))
+twoi
 ```
 
     ii. build a single-level model that models _f0mn_ as dependent on _gender_ using this new dataset
+```{r}
+m5 <- lm(mean_f0mn ~ gender, data = twoi)
+m5
+```
+
     iii. make Quantile-Quantile plots, comparing theoretical quantiles to the sample quantiles) using `qqnorm` and `qqline` for the new single-level model and compare it to the old single-level model (from 1).i). Which model's residuals ($\epsilon$) fulfil the assumptions of the General Linear Model better?)
+```{r}
+qqnorm(residuals(m5))
+qqline(residuals(m5))
+
+qqnorm(residuals(m1))
+qqline(residuals(m1))
+```
+
     iv. Also make a quantile-quantile plot for the residuals of the  multilevel model with two intercepts. Does it look alright?
+```{r}
+qqnorm(residuals(m4))
+qqline(residuals(m4))
+```
+
 3) Plotting the two-intercepts model
     i. Create a plot for each subject, (similar to part 3 in Exercise 1), this time also indicating the fitted value for each of the subjects for each for the scenarios (hint use `fixef` to get the "grand effects" for each gender and `ranef` to get the subject- and scenario-specific effects)
+```{r}
+
+fix <- fixef(m4)
+ran <- ranef(m4)
+
+
+ggplot(data = politeness, aes(x = scenario, y = f0mn, color = attitude)) +
+  geom_point() +
+  geom_line(aes(scenario, fixed.effect), color="black", size=2) +
+  facet_wrap(~ subject)
+```
+
     
 ## Exercise 3 - now with attitude
 
