@@ -1,7 +1,7 @@
 ---
 title: "practical_exercise_3, Methods 3, 2021, autumn semester"
-author: '[FILL IN YOUR NAME]'
-date: "[FILL IN THE DATE]"
+author: 'Juli, Jessica, Anja, Magnus, & Astrid'
+date: "4/10/2010"
 output: html_document
 ---
 
