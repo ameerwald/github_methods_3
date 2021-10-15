@@ -37,33 +37,27 @@ REMEMBER: This assignment will be part of your final portfolio
 
 ## Exercise 1 - describing the dataset and making some initial plots
 
-1) Describe the dataset, such that someone who happened upon this dataset could understand the variables and what they contain  
-    i. Also consider whether any of the variables in _politeness_ should be encoded as factors or have the factor encoding removed. Hint: ```?factor```  
+### 1) Describe the dataset, such that someone who happened upon this dataset could understand the variables and what they contain:  
+  Subject = participant
+  Gender = gender
+  Scenario = condition (e.g. "apologising for being late", "asking a professor for an extension on an assignment" etc)
+  Attitude = informal or formal (polite) conditions
+  Total_duration = of sentence/saying, in seconds
+  f0mn = mean of the f0, which is something to do with frequency (pitch??)
+  hiss_count = audible and nasal hissing/air-sucking in between talking
+#### i. Also consider whether any of the variables in _politeness_ should be encoded as factors or have the factor encoding removed. Hint: ```?factor```  
     
 ```{r}
 
 glimpse(politeness)
 
-# -> Subject = participant
-# -> Gender = gender
-# -> Scenario = condition (e.g. "apologising for being late", "asking a professor for an extension on an assignment" etc)
-# -> Attitude = informal or formal (polite) conditions
-# -> Total_duration = of sentence/saying, in seconds
-# -> f0mn = mean of the f0, which is something to do with frequency (pitch??)
-# -> hiss_count = audible and nasal hissing/air-sucking in between talking
-
-
 politeness$subject <- as_factor(politeness$subject)
 politeness$gender <- as_factor(politeness$gender)
 politeness$attitude <- as_factor(politeness$attitude)
-
-glimpse(politeness)
-
 ```
 
-
     
-2) Create a new data frame that just contains the subject _F1_ and run two linear models; one that expresses _f0mn_ as dependent on _scenario_ as an integer; and one that expresses _f0mn_ as dependent on _scenario_ encoded as a factor  
+### 2) Create a new data frame that just contains the subject _F1_ and run two linear models; one that expresses _f0mn_ as dependent on _scenario_ as an integer; and one that expresses _f0mn_ as dependent on _scenario_ encoded as a factor  
 
 ```{r}
 
@@ -73,44 +67,37 @@ f1df <- politeness %>%
 hist(f1df$f0mn)
 #This is not normal, is that ok?
 
+# as factor 
 f1df$scenario <- as.integer(f1df$scenario)
 class(f1df$scenario)
 model_1_2_integer <- lm(f0mn ~ scenario, data = f1df)
-#How do we chose between lm, glm, lmer, glmer? This is repeated measures design, lm is bad.
-#We start at the most basic level with lm
 
+#as integer 
 f1df$scenario <- as_factor(f1df$scenario)
 class(f1df$scenario)
 model_1_2_factor <- lm(f0mn ~ scenario, data = f1df)
-
-#R should know that this is not an integer that it can do math with, it is a factor and 1 might as well be called "Talking to teacher"
-
 ```
 
+Should not be an integer that it can do math with, it is a factor and 1 might as well be called "Talking to teacher"
 
-    i. Include the model matrices, $X$ from the General Linear Model, for these two models in your report and describe the different interpretations of _scenario_ that these entail
+#### i. Include the model matrices, $X$ from the General Linear Model, for these two models in your report and describe the different interpretations of _scenario_ that these entail
     
 ```{r}
-
 model.matrix(model_1_2_integer)
-# The matrix shows the scenario as x-values, as a datapoint that has a corresponding y-value(the frequency). The number as the output/value from the scenario
-
-model.matrix(model_1_2_factor)
-# Here we see true/false, whether the trial is from the scenario or not. 
-
-#The integer encoding treats the scenarios as 'scores' or data points — which is not the way the scenario number should be treated in this case. The factor encoding treats it like TRUE/FALSE and in this way, we can work with the scenario column as an experiment condition.
 ```
+The matrix shows the scenario as x-values, as a datapoint that has a corresponding y-value(the frequency). The number as the output/value from the scenario
 
-    ii. Which coding of _scenario_, as a factor or not, is more fitting?
-    
 ```{r}
-
-# Factor is more fitting, 1 is not a value but a name for a specific senario. Coding as an integer makes R interpret the data incorrectly.
-
+model.matrix(model_1_2_factor)
 ```
+Here we see true/false, whether the trial is from the scenario or not. 
+
+The integer encoding treats the scenarios as 'scores' or data points — which is not the way the scenario number should be treated in this case. The factor encoding treats it like TRUE/FALSE and in this way, we can work with the scenario column as an experiment condition.
+
+#### ii. Which coding of _scenario_, as a factor or not, is more fitting?
+Factor is more fitting, 1 is not a value but a name for a specific senario. Coding as an integer makes R interpret the data incorrectly.
     
-    
-3) Make a plot that includes a subplot for each subject that has _scenario_ on the x-axis and _f0mn_ on the y-axis and where points are colour coded according to _attitude_
+### 3) Make a plot that includes a subplot for each subject that has _scenario_ on the x-axis and _f0mn_ on the y-axis and where points are colour coded according to _attitude_
 
 ```{r}
 ggplot(data = politeness, aes(x = scenario, y = f0mn, color = attitude)) +
@@ -119,16 +106,11 @@ ggplot(data = politeness, aes(x = scenario, y = f0mn, color = attitude)) +
   theme_bw()
 ```
 
-    i. Describe the differences between subjects
-
-```{r}
-# Males have lower frequency than females
-# Some people are not as affected by attitude as others
-# Looking at F5 as an example, the scenario seem to have a bigger impact on voice than attitude
-# For the hypotheses that Koreans lower their voices in formal conditions to hold, the red dots should be above the blue, which is hard to conclude anything from in the graphs, but might be true
-
-```
-
+#### i. Describe the differences between subjects
+- Males have lower frequency than females.
+- Some people are not as affected by attitude as others.
+- Looking at subject F5 as an example, the scenario seem to have a bigger impact on voice than attitude.
+- For the hypotheses that Koreans lower their voices in formal conditions to hold, the red dots should be above the blue, which is hard to conclude from just the graphs, but might be true.
 
     
 ## Exercise 2  - comparison of models
@@ -142,11 +124,10 @@ mixed.model <- lmer(formula=..., data=...)
 example.formula <- formula(dep.variable ~ first.level.variable + (1 | second.level.variable))
 ```
 
-1) Build four models and do some comparisons
-    i. a single level model that models _f0mn_ as dependent on _gender_
+### 1) Build four models and do some comparisons
+
     
 ```{r}
-
 hist(politeness$f0mn)
 
 ggplot(politeness, aes(sample=f0mn)) +
@@ -155,56 +136,54 @@ ggplot(politeness, aes(sample=f0mn)) +
   labs(x = "Theoretical Quantiles", y = "Sample Quantiles") +
   ggtitle("Q-Q Plot of politeness") +
   theme_minimal()
-#Is it normal enough to model?
-
-model_2_1 <- lm(f0mn ~ gender, data = politeness)
-model_2_1
-
 ```
+We wondered if the data was normal enough to model...? We used the hist() and plotted it to visualize it. 
+
+#### i. a single level model that models _f0mn_ as dependent on _gender_
+
+```{r}
+model_2_1 <- lm(f0mn ~ gender, data = politeness)
+```
+ 
     
-    
-    ii. a two-level model that adds a second level on top of i. where unique intercepts are modelled for each _scenario_
+#### ii. a two-level model that adds a second level on top of i. where unique intercepts are modelled for each _scenario_
 ```{r}
 model_2_2 <- lmer(f0mn ~ gender + (1 | scenario), data = politeness)
-model_2_2
 ```
     
-    iii. a two-level model that only has _subject_ as an intercept 
+#### iii. a two-level model that only has _subject_ as an intercept 
 ```{r}
 model_2_3 <- lmer(f0mn ~ gender + (1 | subject), data = politeness)
-model_2_3
 ```
     
-    iv. a two-level model that models intercepts for both _scenario_ and _subject_
+#### iv. a two-level model that models intercepts for both _scenario_ and _subject_
     
 ```{r}
 model_2_4 <- lmer(f0mn ~ gender + (1|subject) + (1|scenario), data = politeness)
- model_2_4
 ```
     
     
-    v. which of the models has the lowest residual standard deviation, also compare the Akaike Information Criterion `AIC`?
+#### v. which of the models has the lowest residual standard deviation, also compare the Akaike Information Criterion `AIC`?
     
 ```{r}
 
-# Showing the residual standard deviation of each model 
+# HOw to calculate the residual standard deviation of each model 
 sigma(model_2_1)
 
 # Combining the residual standard deviation's into one table 
 SD_comparison <- cbind(sigma(model_2_1), sigma(model_2_2), sigma(model_2_3), sigma(model_2_4)) 
 SD_comparison
 
-# Getting the AIC for each model 
+# Calculating the AIC for each model 
 AIC(logLik(model_2_1))
 
 # Combinging the AIC's of all the models into one table
 AIC_comparison <- cbind(AIC(logLik(model_2_1)), AIC(logLik(model_2_2)), AIC(logLik(model_2_3)), AIC(logLik(model_2_4))) 
 AIC_comparison
-
 ```
+From the tables we created, we can see that our model_2_4 as the lowest residual standard deviation and AIC.    
     
-    
-    vi. which of the second-level effects explains the most variance?
+#### vi. which of the second-level effects explains the most variance?
     
 ```{r}
 
@@ -212,29 +191,23 @@ r.squaredGLMM(model_2_1)
 
 r_squared_comparison <- cbind(r.squaredGLMM(model_2_1), r.squaredGLMM(model_2_2), r.squaredGLMM(model_2_3), r.squaredGLMM(model_2_4)) 
 r_squared_comparison
-
-# The fourth is the best
-
 ```
+When looking at the R^2, we see again that model_2_4 has the highest value and exlains the most variance.  
     
-    
-2) Why is our single-level model bad?
-    i. create a new data frame that has three variables, _subject_, _gender_ and _f0mn_, where _f0mn_ is the average of all responses of each subject, i.e. averaging across (ignoring) _attitude_ and_scenario_
+### 2) Why is our single-level model bad?
+#### i. create a new data frame that has three variables, _subject_, _gender_ and _f0mn_, where _f0mn_ is the average of all responses of each subject, i.e. averaging across (ignoring) _attitude_ and_scenario_
     
 ```{r}
-
 simple_df <- politeness %>% 
   filter(!is.na(f0mn)) %>% 
   group_by(subject, gender) %>% 
   summarise(mean_f0mn = mean(f0mn))
 simple_df
-
 # There is so few N/A that we can kill them off in good faith
-
 ```
     
     
-    ii. build a single-level model that models _f0mn_ as dependent on _gender_ using this new dataset
+#### ii. build a single-level model that models _f0mn_ as dependent on _gender_ using this new dataset
     
 ```{r}
 
@@ -244,7 +217,7 @@ model_2_5
 ```
     
     
-    iii. make Quantile-Quantile plots, comparing theoretical quantiles to the sample quantiles) using `qqnorm` and `qqline` for the new single-level model and compare it to the old single-level model (from 1).i). Which model's residuals ($\epsilon$) fulfil the assumptions of the General Linear Model better?)
+#### iii. make Quantile-Quantile plots, comparing theoretical quantiles to the sample quantiles) using `qqnorm` and `qqline` for the new single-level model and compare it to the old single-level model (from 1).i). Which model's residuals ($\epsilon$) fulfil the assumptions of the General Linear Model better?)
     
 ```{r}
 
@@ -261,7 +234,7 @@ qqline(residuals(model_2_5))
 
 ```
     
-    iv. Also make a quantile-quantile plot for the residuals of the  multilevel model with two intercepts. Does it look alright?
+#### iv. Also make a quantile-quantile plot for the residuals of the  multilevel model with two intercepts. Does it look alright?
     
 ```{r}
 
@@ -271,8 +244,8 @@ qqline(residuals(model_2_4))
 ```
     
     
-3) Plotting the two-intercepts model
-    i. Create a plot for each subject, (similar to part 3 in Exercise 1), this time also indicating the fitted value for each of the subjects for each for the scenarios (hint use `fixef` to get the "grand effects" for each gender and `ranef` to get the subject- and scenario-specific effects)
+### 3) Plotting the two-intercepts model
+#### i. Create a plot for each subject, (similar to part 3 in Exercise 1), this time also indicating the fitted value for each of the subjects for each for the scenarios (hint use `fixef` to get the "grand effects" for each gender and `ranef` to get the subject- and scenario-specific effects)
     
 ```{r}
 
@@ -292,21 +265,21 @@ ggplot(data = politeness_na_removed, aes(x = scenario, y = f0mn, color = attitud
     
 ## Exercise 3 - now with attitude
 
-1) Carry on with the model with the two unique intercepts fitted (_scenario_ and _subject_).
-    i. now build a model that has _attitude_ as a main effect besides _gender_
+### 1) Carry on with the model with the two unique intercepts fitted (_scenario_ and _subject_).
+#### i. now build a model that has _attitude_ as a main effect besides _gender_
 ```{r}
 #Adding attitude as a main effect
 model_3_1 <- lmer(f0mn ~ gender + attitude + (1 | scenario) + (1 | subject), data = politeness)
 summary(model_3_1)
 ```
     
-    ii. make a separate model that besides the main effects of _attitude_ and _gender_ also include their interaction
+#### ii. make a separate model that besides the main effects of _attitude_ and _gender_ also include their interaction
 ```{r}
 #Adding the interaction of gender and attitude
 model_3_2 <- lmer(f0mn ~ gender * attitude + (1 | scenario) + (1 | subject), data = politeness)
 summary(model_3_2)
 ```
-    iii. describe what the interaction term in the model says about Korean men's pitch when they are polite relative to Korean women's pitch when they are polite (you don't have to judge whether it is interesting)  
+#### iii. describe what the interaction term in the model says about Korean men's pitch when they are polite relative to Korean women's pitch when they are polite (you don't have to judge whether it is interesting)  
 
 ```{r}
 
@@ -315,7 +288,7 @@ summary(model_3_2)
 ```
 
     
-2) Compare the three models (1. gender as a main effect; 2. gender and attitude as main effects; 3. gender and attitude as main effects and the interaction between them. For all three models model unique intercepts for _subject_ and _scenario_) using residual variance, residual standard deviation and AIC.  
+### 2) Compare the three models (1. gender as a main effect; 2. gender and attitude as main effects; 3. gender and attitude as main effects and the interaction between them. For all three models model unique intercepts for _subject_ and _scenario_) using residual variance, residual standard deviation and AIC.  
 ```{r}
 #Is R^2 the residual variance?
 r.squaredGLMM(model_2_4)
@@ -337,8 +310,8 @@ AIC2
 AIC3
 ```
 
-3)  Choose the model that you think describe the data the best - and write a short report on the main findings based on this model. At least include the following:
-  i. describe what the dataset consists of  
+### 3)  Choose the model that you think describe the data the best - and write a short report on the main findings based on this model. At least include the following:
+#### i. describe what the dataset consists of  
   
 ```{r}
 
@@ -348,7 +321,7 @@ AIC3
 ```
   
   
-  ii. what can you conclude about the effect of gender and attitude on pitch (if anything)? 
+#### ii. what can you conclude about the effect of gender and attitude on pitch (if anything)? 
   
 ```{r}
 
@@ -357,7 +330,7 @@ AIC3
 ```
   
   
-  iii. motivate why you would include separate intercepts for subjects and scenarios (if you think they should be included)  
+#### iii. motivate why you would include separate intercepts for subjects and scenarios (if you think they should be included)  
   
 ```{r}
 
@@ -366,7 +339,7 @@ AIC3
 
 ```
   
-  iv. describe the variance components of the second level (if any) 
+#### iv. describe the variance components of the second level (if any) 
   
 ```{r}
 
@@ -385,7 +358,7 @@ summary(model_3_2)
 
 ```
   
-  v. include a Quantile-Quantile plot of your chosen model  
+#### v. include a Quantile-Quantile plot of your chosen model  
   
 ```{r}
 
