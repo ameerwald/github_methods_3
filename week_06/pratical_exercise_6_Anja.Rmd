@@ -185,6 +185,9 @@ print(beta_hat)
 ```
 
 ###    ii. Then create an $X$ where the resulting $\hat\beta$ indicates: 1) the difference between the mean of $y_1$ and the mean of $y_2$; 2) the mean of $y_2$; 3) the difference between the mean of $y_3$ and the mean of $y_1$  
+
+
+
 ## 3) Finally, find the F-value for this model (from exercise 1.2.ii) and its degrees of freedom. What is the _p_-value associated with it? (You can import the inverse of the cumulative probability density function `ppf` for _F_ using `from scipy.stats import f` and then run `1 - f.ppf`)
 ###    i. plot the probability density function `f.pdf` for the correct F-distribution and highlight the _F_-value that you found  
 ###    ii. how great a percentage of the area of the curve is to right of the highlighted point
@@ -204,8 +207,15 @@ $bias(\hat{f}(x_0)) = E[\hat{f}(x_0)] - f(x_0)$
 
 ## 1) Create a function, $f(x)$ that squares its input. This is our __true__ function  
 ### i. generate data, $y_{true}$, based on an input range of [0, 6] with a spacing of 0.1. Call this $x$
+
+
+
 ### ii. add normally distributed noise to $y_{true}$ with $\sigma=5$ (set a seed to 7 `np.random.seed(7)`) and call it $y_{noise}$
-###    iii. plot the true function and the generated points  
+
+
+###    iii. plot the true function and the generated points
+
+
 ## 2) Fit a linear regression using `LinearRegression` from `sklearn.linear_model` based on $y_{noise}$ and $x$ (see code below)  
 ### i. plot the fitted line (see the `.intercept_` and `.coef_` attributes of the `regressor` object) on top of the plot (from 2.1.iii)
 ### ii. now run the code associated with Exercise 2.2.ii - what does X_quadratic amount to?

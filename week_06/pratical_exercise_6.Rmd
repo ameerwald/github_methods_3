@@ -122,7 +122,7 @@ plt.plot([2, 1], [2, 1], 'ro') # scatter plot (red)
 plt.xlabel('a label')
 plt.title('a title')
 plt.legend(['a legend', 'another legend'])
-# plt.show()
+plt.show()
 ```
 # EXERCISE 1
 ## 1) Do a linear regression based on _x_, _X_ and _y_ below (_y_ as the dependent variable) (Exercise 1.1)  
