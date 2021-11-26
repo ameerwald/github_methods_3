@@ -108,7 +108,7 @@ Plot the magnetic field for each of the repetitions (a line for each) for the se
 # plt.axvline(112)
 # plt.show()
 
-# switched 251 to 682 b/c thats the number of repititons 
+# switched 251 to 682 b/c thats the number of repetitions 
 for i in range(682):
     plt.plot(times, data[i,73, :])
     
@@ -120,7 +120,7 @@ Describe in your own words how the response found in the average is represented 
 ```{python}
 ##@ need to do this 
 ```
-
+###NEED TO DO THIS 
 ##1.2) 
 Now load `pas_vector.npy` (call it `y`). PAS is the same as in Assignment 2, describing the clarity of the subjective experience the subject reported after seeing the briefly presented stimulus  
 ```{python}
@@ -165,7 +165,7 @@ Notice that there are two early peaks (measuring visual activity from the brain)
 ```{python}
 ##@ NEED TO DO THIS 
 ```
-
+###NEED TO DO THIS 
 
 # EXERCISE 2 - Do logistic regression to classify pairs of PAS-ratings  
 
@@ -178,22 +178,14 @@ pas12 = np.where((y == 1) | (y == 2))
 
 data_1_2 = np.squeeze(data[pas12,:,:]) # np.squeeze gets rid of the point that is only 1
 
-# this way screws up the order 
-#data_1_2 =  np.concatenate((data[pas1], data[pas2]), axis=0) # 3D
 data_1_2.shape
 data_1_2.ndim # how many dimensions 
-#create a `y_1_2` for the target vector
-#y_1_2 = []
-#for i in range(len(y)):
-#    if y[i] == 1:
-#        y_1_2.append(i)
-#   if y[i] == 2:
-#        y_1_2.append(i)
+
 
 y_1_2 = np.squeeze(y[pas12])
         
 len(y_1_2)      
-##@ Unsure if this loop is working correctly/getting us what we need...
+
 
 ```
 ###2.1.ii. 
@@ -222,37 +214,73 @@ X_1_2 = scaler.fit_transform(X_1_2)
 Do a standard `LogisticRegression` - can be imported from `sklearn.linear_model` - make sure there is no `penalty` applied  
 ```{python}
 # import logisticregression and naming it 
-from sklearn.linear_model import LinearRegression
-regressor = LinearRegression()
+from sklearn.linear_model import LogisticRegression
+regressor = LogisticRegression(penalty = 'none') # solver default is lbfgs
+log_fit = regressor.fit(X_1_2, y_1_2)
+
+log_fit.coef_
 
 # penalty = L1 (lamda 1) penalizing for large coefficients, solver = 'liblinear' works with L1 and L2
 ```
 
 ###2.1.v. 
 Use the `score` method of `LogisticRegression` to find out how many labels were classified correctly. Are we overfitting? Besides the score, what would make you suspect that we are overfitting?  
+```{python}
+log_fit.score(X_1_2, y_1_2)
+
+```
+Yes we're overfitting based on the score of 1.0. Our model also fits our whole data set which often leads to overfitting. This is why it's better to split up the data into a training and test set. 
+
 ###2.1.vi. 
-Now apply the _L1_ penalty instead - how many of the coefficients (`.coef_`) are non-zero after this?  
+Now apply the _L1_ penalty instead - how many of the coefficients (`.coef_`) are non-zero after this? 
+```{python}
+from sklearn.linear_model import LogisticRegression
+np.random.seed(7)
+regressor = LogisticRegression(penalty = 'l1', solver = 'liblinear') # solver default is lbfgs
+log_fit_1 = regressor.fit(X_1_2, y_1_2)
+
+log_fit_1.coef_
+
+np.count_nonzero(log_fit_1.coef_) #counting the non-zero coefficients
+
+```
+
+
 ###2.1.vii. 
-Create a new reduced $X$ that only includes the non-zero coefficients - show the covariance of the non-zero features (two covariance matrices can be made; $X_{reduced}X_{reduced}^T$ or $X_{reduced}^TX_{reduced}$ (you choose the right one)) . Plot the covariance of the features using `plt.imshow`. Compared to the plot from 1.1.iii, do we see less covariance?  
+Create a new reduced $X$ that only includes the non-zero coefficients - show the covariance of the non-zero features (two covariance matrices can be made; $X_{reduced}X_{reduced}^T$ or $X_{reduced}^TX_{reduced}$ (you choose the right one)) . Plot the covariance of the features using `plt.imshow`. Compared to the plot from 1.1.iii, do we see less covariance? 
+```{python}
+non_zero = np.where(log_fit_1.coef_ != 0)
+print(non_zero) # this gives us the second column which has the non zero coefficients only 
+print(non_zero[1])
+
+x_reduced = X_1_2[:,non_zero[1]] # Taking the previous X_1_2 and subsetting the non-zero coefficients
+
+
+print(x_reduced)
+print(x_reduced[1]) 
+
+# we do the x_reduced transposed * x_reduced so that we "get rid of" the zeros, per matrix multiplication 
+x_reduced_cov = (x_reduced.T @ x_reduced)
+x_reduced_cov.shape 
+
+plt.figure()
+plt.imshow(x_reduced_cov)
+plt.colorbar()
+plt.show()
+
+```
+We see more covariance in this plot 
 ##2.2) 
 Now, we are going to build better (more predictive) models by using cross-validation as an outcome measure    
 ###2.2.i. 
 Import `cross_val_score` and `StratifiedKFold` from `sklearn.model_selection`  
+```{python}
+from sklearn.model_selection import cross_val_score as cvs
+from sklearn.model_selection import StratifiedKFold as skfold
+```
+
 ###2.2.ii. 
 To make sure that our training data sets are not biased to one target (PAS) or the other, create `y_1_2_equal`, which should have an equal number of each target. Create a similar `X_1_2_equal`. The function `equalize_targets_binary` in the code chunk associated with Exercise 2.2.ii can be used. Remember to scale `X_1_2_equal`!  
-###2.2.iii. 
-Do cross-validation with 5 stratified folds doing standard `LogisticRegression` (See Exercise 2.1.iv)  
-###2.2.iv. 
-Do L2-regularisation with the following `Cs=  [1e5, 1e1, 1e-5]`. Use the same kind of cross-validation as in Exercise 2.2.iii. In the best-scoring of these models, how many more/fewer predictions are correct (on average)?  
-###2.2.v. 
-Instead of fitting a model on all `n_sensors * n_samples` features, fit  a logistic regression (same kind as in Exercise 2.2.iv (use the `C` that resulted in the best prediction)) for __each__ time sample and use the same cross-validation as in Exercise 2.2.iii. What are the time points where classification is best? Make a plot with time on the x-axis and classification score on the y-axis with a horizontal line at the chance level (what is the chance level for this analysis?)  
-###2.2.vi. 
-Now do the same, but with L1 regression - set `C=1e-1` - what are the time points when classification is best? (make a plot)?  
-###2.2.vii. 
-Finally, fit the same models as in Exercise 2.2.vi but now for `data_1_4` and `y_1_4` (create a data set and a target vector that only contains PAS responses 1 and 4). What are the time points when classification is best? Make a plot with time on the x-axis and classification score on the y-axis with a horizontal line at the chance level (what is the chance level for this analysis?)  
-##2.3) 
-Is pairwise classification of subjective experience possible? Any surprises in the classification accuracies, i.e. how does the classification score fore PAS 1 vs 4 compare to the classification score for PAS 1 vs 2?  
-
 
 ```{python, eval=FALSE}
 # Exercise 2.2.ii
@@ -277,7 +305,26 @@ def equalize_targets_binary(data, y):
     new_data = data[new_indices, :, :]
     
     return new_data, new_y
+    
+X_1_2_equal, y_1_2_equal = equalize_targets_binary(X_1_2, y_1_2)
 ```
+
+
+###2.2.iii. 
+Do cross-validation with 5 stratified folds doing standard `LogisticRegression` (See Exercise 2.1.iv)  
+###2.2.iv. 
+Do L2-regularisation with the following `Cs=  [1e5, 1e1, 1e-5]`. Use the same kind of cross-validation as in Exercise 2.2.iii. In the best-scoring of these models, how many more/fewer predictions are correct (on average)?  
+###2.2.v. 
+Instead of fitting a model on all `n_sensors * n_samples` features, fit  a logistic regression (same kind as in Exercise 2.2.iv (use the `C` that resulted in the best prediction)) for __each__ time sample and use the same cross-validation as in Exercise 2.2.iii. What are the time points where classification is best? Make a plot with time on the x-axis and classification score on the y-axis with a horizontal line at the chance level (what is the chance level for this analysis?)  
+###2.2.vi. 
+Now do the same, but with L1 regression - set `C=1e-1` - what are the time points when classification is best? (make a plot)?  
+###2.2.vii. 
+Finally, fit the same models as in Exercise 2.2.vi but now for `data_1_4` and `y_1_4` (create a data set and a target vector that only contains PAS responses 1 and 4). What are the time points when classification is best? Make a plot with time on the x-axis and classification score on the y-axis with a horizontal line at the chance level (what is the chance level for this analysis?)  
+##2.3) 
+Is pairwise classification of subjective experience possible? Any surprises in the classification accuracies, i.e. how does the classification score fore PAS 1 vs 4 compare to the classification score for PAS 1 vs 2?  
+
+
+
 
 # EXERCISE 3 - Do a Support Vector Machine Classification on all four PAS-ratings  
 ```{r}
@@ -305,7 +352,8 @@ Finally, split the equalized data set (with all four ratings) into a training pa
 ###3.2.i. 
 Use the kernel that resulted in the best classification in Exercise 3.1.ii and `fit`the training set and `predict` on the test set. This time your features are the number of sensors multiplied by the number of samples.  
 ###3.2.ii. 
-Create a _confusion matrix_. It is a 4x4 matrix. The row names and the column names are the PAS-scores. There will thus be 16 entries. The PAS1xPAS1 entry will be the number of actual PAS1, $y_{pas1}$ that were predicted as PAS1, $\hat y_{pas1}$. The PAS1xPAS2 entry will be the number of actual PAS1, $y_{pas1}$ that were predicted as PAS2, $\hat y_{pas2}$ and so on for the remaining 14 entries.  Plot the matrix
+Create a _confusion matrix_. It is a 4x4 matrix. The row names and the column names are the PAS-scores. There will thus be 16 entries. The PAS1xPAS1 entry will be th
+e number of actual PAS1, $y_{pas1}$ that were predicted as PAS1, $\hat y_{pas1}$. The PAS1xPAS2 entry will be the number of actual PAS1, $y_{pas1}$ that were predicted as PAS2, $\hat y_{pas2}$ and so on for the remaining 14 entries.  Plot the matrix
 ```{python}
 # from sklearn.metrics import ConfusionMatrixDisplay 
 #ConfusionMatrixDisplay.from_predictions(true_y, predicted_y)
