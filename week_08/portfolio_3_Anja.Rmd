@@ -282,8 +282,8 @@ from sklearn.model_selection import StratifiedKFold as skfold
 ###2.2.ii. 
 To make sure that our training data sets are not biased to one target (PAS) or the other, create `y_1_2_equal`, which should have an equal number of each target. Create a similar `X_1_2_equal`. The function `equalize_targets_binary` in the code chunk associated with Exercise 2.2.ii can be used. Remember to scale `X_1_2_equal`!  
 
-```{python, eval=FALSE}
-# Exercise 2.2.ii
+```{python}
+# Function is to get same number of trials with post pas 1 and pas 2 rating; takes the minimum number, and then takes a sample from the larger to get equal number of trials for both. Takes 3D data, not the collapsed version 
 def equalize_targets_binary(data, y):
     np.random.seed(7)
     targets = np.unique(y) ## find the number of targets
@@ -306,14 +306,51 @@ def equalize_targets_binary(data, y):
     
     return new_data, new_y
     
-X_1_2_equal, y_1_2_equal = equalize_targets_binary(X_1_2, y_1_2)
+    
+data_1_2.shape
+y_1_2.shape
+
+# Use the function
+data_1_2_equal, y_1_2_equal = equalize_targets_binary(data_1_2, y_1_2)
+
+data_1_2_equal.shape
+y_1_2_equal.shape
+
+# Reshape data into 2d
+X_1_2_equal = data_1_2_equal.reshape(198, -1)
+
+X_1_2_equal.shape
+
+# Scale the data
+from sklearn.preprocessing import StandardScaler
+scaler = StandardScaler() 
+X_1_2_equal = scaler.fit_transform(X_1_2_equal)
+
+
+
 ```
 
 
 ###2.2.iii. 
 Do cross-validation with 5 stratified folds doing standard `LogisticRegression` (See Exercise 2.1.iv)  
+```{python}
+# stratified folds 
+from sklearn.linear_model import LogisticRegression
+regressor = LogisticRegression(penalty = 'none') # solver default is lbfgs
+log_fit_equal = regressor.fit(X_1_2_equal, y_1_2_equal)
+
+cvs(log_fit, X_1_2_equal, y_1_2_equal,cv=5)
+
+# accuracy score for each split 
+```
+
 ###2.2.iv. 
 Do L2-regularisation with the following `Cs=  [1e5, 1e1, 1e-5]`. Use the same kind of cross-validation as in Exercise 2.2.iii. In the best-scoring of these models, how many more/fewer predictions are correct (on average)?  
+```{python}
+#2ame as above penalty = L2, logistric regression as a C- argument (opposite of lamda)
+# do a for loop, for C in....
+```
+
 ###2.2.v. 
 Instead of fitting a model on all `n_sensors * n_samples` features, fit  a logistic regression (same kind as in Exercise 2.2.iv (use the `C` that resulted in the best prediction)) for __each__ time sample and use the same cross-validation as in Exercise 2.2.iii. What are the time points where classification is best? Make a plot with time on the x-axis and classification score on the y-axis with a horizontal line at the chance level (what is the chance level for this analysis?)  
 ###2.2.vi. 
