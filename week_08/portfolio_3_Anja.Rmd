@@ -339,7 +339,7 @@ from sklearn.linear_model import LogisticRegression
 regressor = LogisticRegression(penalty = 'none') # solver default is lbfgs
 log_fit_equal = regressor.fit(X_1_2_equal, y_1_2_equal)
 
-cvs(log_fit, X_1_2_equal, y_1_2_equal,cv=5)
+cvs(log_fit_equal, X_1_2_equal, y_1_2_equal,cv=5)
 
 # accuracy score for each split 
 ```
@@ -347,18 +347,128 @@ cvs(log_fit, X_1_2_equal, y_1_2_equal,cv=5)
 ###2.2.iv. 
 Do L2-regularisation with the following `Cs=  [1e5, 1e1, 1e-5]`. Use the same kind of cross-validation as in Exercise 2.2.iii. In the best-scoring of these models, how many more/fewer predictions are correct (on average)?  
 ```{python}
-#2ame as above penalty = L2, logistric regression as a C- argument (opposite of lamda)
+# Same as above penalty = L2, logistic regression as a C- argument (opposite of lamda)
 # do a for loop, for C in....
+
+Cs=  [1e5, 1e1, 1e-5]
+
+for c in Cs:
+  log = LogisticRegression(penalty = 'l2', C=c) # solver default is lbfgs
+  log_fit_equal = log.fit(X_1_2_equal, y_1_2_equal)
+  scores = cvs(log_fit_equal, X_1_2_equal, y_1_2_equal,cv=5)
+  print(scores.mean())
+  
+  
+# Amount of predictions correct
+from sklearn.model_selection import cross_val_predict as cvp
+log_c_neg5 = LogisticRegression(penalty='l2', C=1e-5) 
+predict_c_neg5 = cvp(log_c_neg5, X_1_2_equal, y_1_2_equal, cv=5)
+#accuracy_neg5 = predict_c_neg5 == y_1_2_equal  
+## this is from Mina and I don't quite understand it, *** Write to Mina and ask :)
+
+## Accuracy Log Model 2.2iii
+predict_log = cvp(regressor, X_1_2_equal, y_1_2_equal, cv=5)
+#accuracy_log = predict_log == y_1_2_equal
+print("Correct Predictions Log 2.2iii:", len(np.where(accuracy_log == True)[0]))
+print("Correct Predictions Log 1e-5:", len(np.where(accuracy_neg5 == True)[0]))
+
+```
+Based on the scores, Cs of 1e-5 is the most accurate, 60%, where the other two were 53% and 54%. We also have more correct predictions with the penalized model. 
+```{python, eval = FALSE}
+# This way prints the whole array, not sure if that's needed but above code won't do it... Do we want the whole array?
+Cs=  [1e5, 1e1, 1e-5]
+
+for c in Cs:
+  log = LogisticRegression(penalty = 'l2', C=c) # solver default is lbfgs
+  log_fit_equal = log.fit(X_1_2_equal, y_1_2_equal)
+  cvs(log_fit_equal, X_1_2_equal, y_1_2_equal,cv=5)
+  
 ```
 
+
 ###2.2.v. 
-Instead of fitting a model on all `n_sensors * n_samples` features, fit  a logistic regression (same kind as in Exercise 2.2.iv (use the `C` that resulted in the best prediction)) for __each__ time sample and use the same cross-validation as in Exercise 2.2.iii. What are the time points where classification is best? Make a plot with time on the x-axis and classification score on the y-axis with a horizontal line at the chance level (what is the chance level for this analysis?)  
+Instead of fitting a model on all `n_sensors * n_samples` features, fit  a logistic regression (same kind as in Exercise 2.2.iv (use the `C` that resulted in the best prediction)) for __each__ time sample and use the same cross-validation as in Exercise 2.2.iii. What are the time points where classification is best? Make a plot with time on the x-axis and classification score on the y-axis with a horizontal line at the chance level (what is the chance level for this analysis?)
+```{python}
+## empty list for the cross scores 
+cross_scores = []
+
+for i in range(251):
+  #Creating data and scaling 
+  scaler = StandardScaler()
+  X_time = data_1_2_equal[:,:,i]
+  X_time_scaled = scaler.fit_transform(X_time)
+  
+#Creating a logistic regression object
+lr = LogisticRegression(penalty='l2', C=1e-5)
+  
+#Cross-validating 
+score = cvs(lr, X_time_scaled, y_1_2_equal, cv = 5)
+  
+#taking the mean 
+mean = np.mean(score)
+  
+#appending the mean
+cross_scores.append(mean)
+
+#print(cross_scores)
+```
+
+```{python}
+#Finding the time point where classification is best - issues with this...
+indexmax = cross_scores.index(max(cross_scores))
+times[indexmax]
+plt.figure()
+plt.axvline(x = times[indexmax], color = "black", alpha = 0.5)  
+plt.plot(times, cross_scores)
+plt.axhline(y = 0.50, color = "black")
+plt.title("L2 Regularisation: Classification Accuracy vs. Time")
+plt.xlabel("Time (ms)")
+plt.ylabel("Accuracy")
+plt.show()
+```
+
+```{python}
+
+
+cross_val_scores = []
+
+for i in range(251):
+  regressor = LogisticRegression(penalty = 'l2', C=1e-5) 
+  log_fit_equal = regressor.fit(X_1_2_equal, y_1_2_equal)
+  cvs(log_fit_equal, X_1_2_equal, y_1_2_equal,cv=5)
+
+
+```
+
+
 ###2.2.vi. 
 Now do the same, but with L1 regression - set `C=1e-1` - what are the time points when classification is best? (make a plot)?  
+```{python}
+
+```
+
 ###2.2.vii. 
-Finally, fit the same models as in Exercise 2.2.vi but now for `data_1_4` and `y_1_4` (create a data set and a target vector that only contains PAS responses 1 and 4). What are the time points when classification is best? Make a plot with time on the x-axis and classification score on the y-axis with a horizontal line at the chance level (what is the chance level for this analysis?)  
+Finally, fit the same models as in Exercise 2.2.vi but now for `data_1_4` and `y_1_4` (create a data set and a target vector that only contains PAS responses 1 and 4). What are the time points when classification is best? Make a plot with time on the x-axis and classification score on the y-axis with a horizontal line at the chance level (what is the chance level for this analysis?) 
+```{python}
+pas14 = np.where((y == 1) | (y == 4))
+
+data_1_4 = data[pas14] # np.squeeze gets rid of the point that is only 1
+
+data_1_4.shape
+data_1_4.ndim # how many dimensions 
+
+
+y_1_4 = np.squeeze(y[pas14])
+        
+len(y_1_4)  
+```
+
 ##2.3) 
 Is pairwise classification of subjective experience possible? Any surprises in the classification accuracies, i.e. how does the classification score fore PAS 1 vs 4 compare to the classification score for PAS 1 vs 2?  
+```{python}
+
+```
+
 
 
 
