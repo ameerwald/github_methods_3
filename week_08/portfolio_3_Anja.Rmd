@@ -125,7 +125,7 @@ Describe in your own words how the response found in the average is represented 
 Now load `pas_vector.npy` (call it `y`). PAS is the same as in Assignment 2, describing the clarity of the subjective experience the subject reported after seeing the briefly presented stimulus  
 ```{python}
 y = np.load("pas_vector.npy")
-y
+
 ```
 ###1.2.i. 
 Which dimension in the `data` array does it have the same length as?  
@@ -363,12 +363,12 @@ for c in Cs:
 from sklearn.model_selection import cross_val_predict as cvp
 log_c_neg5 = LogisticRegression(penalty='l2', C=1e-5) 
 predict_c_neg5 = cvp(log_c_neg5, X_1_2_equal, y_1_2_equal, cv=5)
-#accuracy_neg5 = predict_c_neg5 == y_1_2_equal  
+accuracy_neg5 = predict_c_neg5 == y_1_2_equal  
 ## this is from Mina and I don't quite understand it, *** Write to Mina and ask :)
 
 ## Accuracy Log Model 2.2iii
 predict_log = cvp(regressor, X_1_2_equal, y_1_2_equal, cv=5)
-#accuracy_log = predict_log == y_1_2_equal
+accuracy_log = predict_log == y_1_2_equal
 print("Correct Predictions Log 2.2iii:", len(np.where(accuracy_log == True)[0]))
 print("Correct Predictions Log 1e-5:", len(np.where(accuracy_neg5 == True)[0]))
 
@@ -399,56 +399,88 @@ for i in range(251):
   X_time_scaled = scaler.fit_transform(X_time)
   
 #Creating a logistic regression object
-lr = LogisticRegression(penalty='l2', C=1e-5)
+  lr = LogisticRegression(penalty='l2', C=1e-5)
   
 #Cross-validating 
-score = cvs(lr, X_time_scaled, y_1_2_equal, cv = 5)
+  score = cvs(lr, X_time_scaled, y_1_2_equal, cv = 5)
   
 #taking the mean 
-mean = np.mean(score)
+  mean = np.mean(score)
   
 #appending the mean
-cross_scores.append(mean)
+  cross_scores.append(mean)
 
-#print(cross_scores)
+  print(cross_scores)
+# on knit, don't include printed output 
 ```
 
+
+
 ```{python}
-#Finding the time point where classification is best - issues with this...
+## FINDING the time point where classification is best ##
 indexmax = cross_scores.index(max(cross_scores))
 times[indexmax]
 plt.figure()
 plt.axvline(x = times[indexmax], color = "black", alpha = 0.5)  
 plt.plot(times, cross_scores)
 plt.axhline(y = 0.50, color = "black")
-plt.title("L2 Regularisation: Classification Accuracy vs. Time")
+plt.title("L2 PAS 1 & 2: Classification Accuracy vs. Time")
 plt.xlabel("Time (ms)")
 plt.ylabel("Accuracy")
 plt.show()
-```
-
-```{python}
-
-
-cross_val_scores = []
-
-for i in range(251):
-  regressor = LogisticRegression(penalty = 'l2', C=1e-5) 
-  log_fit_equal = regressor.fit(X_1_2_equal, y_1_2_equal)
-  cvs(log_fit_equal, X_1_2_equal, y_1_2_equal,cv=5)
-
-
 ```
 
 
 ###2.2.vi. 
 Now do the same, but with L1 regression - set `C=1e-1` - what are the time points when classification is best? (make a plot)?  
 ```{python}
+## EMPTY list for the cross scores ##
 
+  log = LogisticRegression(penalty = 'l2', C=c) # solver default is lbfgs
+  log_fit_equal = log.fit(X_1_2_equal, y_1_2_equal)
+  cvs(log_fit_equal, X_1_2_equal, y_1_2_equal,cv=5)
+
+cross_scores_l1 = []
+## DEFINING cv again for good measure ## 
+cv = StratifiedKFold(n_splits=5)
+for i in range(251):
+  #Creating data and scaling 
+  scaler = StandardScaler()
+  X_time = data_1_2_equal[:,:,i]
+  X_time_scaled = scaler.fit_transform(X_time)
+  
+  #Creating a logistic regression object
+  lr = LogisticRegression(penalty='l1', solver = "liblinear", C=1e-1)
+  
+  #Cross-validating 
+  score = cross_val_score(lr, X_time_scaled, y_1_2_equal, cv = cv)
+  
+  #taking the mean 
+  mean = np.mean(score)
+  
+  #appending the mean
+  cross_scores_l1.append(mean)
+  
+```
+
+```{python}
+## FINDING the time point where classification is best ##
+indexmax_l1 = cross_scores_l1.index(max(cross_scores_l1))
+times[indexmax_l1]
+plt.figure()
+plt.axvline(x = times[indexmax_l1], color = "black", alpha = 0.5)  
+plt.plot(times, cross_scores_l1)
+plt.axhline(y = 0.50, color = "black")
+plt.title("L1 PAS 1 & 2: Classification Accuracy vs. Time")
+plt.xlabel("Time (ms)")
+plt.ylabel("Accuracy")
+plt.show()
 ```
 
 ###2.2.vii. 
 Finally, fit the same models as in Exercise 2.2.vi but now for `data_1_4` and `y_1_4` (create a data set and a target vector that only contains PAS responses 1 and 4). What are the time points when classification is best? Make a plot with time on the x-axis and classification score on the y-axis with a horizontal line at the chance level (what is the chance level for this analysis?) 
+
+
 ```{python}
 pas14 = np.where((y == 1) | (y == 4))
 
