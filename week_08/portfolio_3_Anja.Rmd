@@ -410,7 +410,7 @@ for i in range(251):
 #appending the mean
   cross_scores.append(mean)
 
-  print(cross_scores)
+  #print(cross_scores)
 # on knit, don't include printed output 
 ```
 
@@ -429,42 +429,27 @@ plt.xlabel("Time (ms)")
 plt.ylabel("Accuracy")
 plt.show()
 ```
-
+The chance level is .5 or 50% because it is a binary classification, either it's pas 1/pas2 or not. 
 
 ###2.2.vi. 
 Now do the same, but with L1 regression - set `C=1e-1` - what are the time points when classification is best? (make a plot)?  
 ```{python}
-## EMPTY list for the cross scores ##
-
-  log = LogisticRegression(penalty = 'l2', C=c) # solver default is lbfgs
-  log_fit_equal = log.fit(X_1_2_equal, y_1_2_equal)
-  cvs(log_fit_equal, X_1_2_equal, y_1_2_equal,cv=5)
 
 cross_scores_l1 = []
-## DEFINING cv again for good measure ## 
-cv = StratifiedKFold(n_splits=5)
+
 for i in range(251):
   #Creating data and scaling 
   scaler = StandardScaler()
   X_time = data_1_2_equal[:,:,i]
   X_time_scaled = scaler.fit_transform(X_time)
-  
-  #Creating a logistic regression object
-  lr = LogisticRegression(penalty='l1', solver = "liblinear", C=1e-1)
-  
-  #Cross-validating 
-  score = cross_val_score(lr, X_time_scaled, y_1_2_equal, cv = cv)
-  
-  #taking the mean 
+  logr = LogisticRegression(penalty='l1', solver = "liblinear", C=1e-1)
+  score = cvs(logr, X_time_scaled, y_1_2_equal, cv = 5)
   mean = np.mean(score)
-  
-  #appending the mean
   cross_scores_l1.append(mean)
   
 ```
 
 ```{python}
-## FINDING the time point where classification is best ##
 indexmax_l1 = cross_scores_l1.index(max(cross_scores_l1))
 times[indexmax_l1]
 plt.figure()
@@ -493,14 +478,42 @@ data_1_4.ndim # how many dimensions
 y_1_4 = np.squeeze(y[pas14])
         
 len(y_1_4)  
+
+# equalize the data
+data_1_4_equal, y_1_4_equal = equalize_targets_binary(data_1_4, y_1_4)
+
+
+cross_scores_pas14 = []
+
+for i in range(251):
+  #Creating data and scaling 
+  scaler = StandardScaler()
+  X_time = data_1_4_equal[:,:,i]
+  X_time_scaled = scaler.fit_transform(X_time)
+  logr = LogisticRegression(penalty='l1', solver = "liblinear", C=1e-1)
+  score = cvs(logr, X_time_scaled, y_1_4_equal, cv = 5)
+  mean = np.mean(score)
+  cross_scores_pas14.append(mean)
 ```
+```{python}
+indexmax_pas14 = cross_scores_pas14.index(max(cross_scores_pas14))
+times[indexmax_pas14]
+plt.figure()
+plt.axvline(x = times[indexmax_l1], color = "black", alpha = 0.5)  
+plt.plot(times, cross_scores_pas14)
+plt.axhline(y = 0.50, color = "black")
+plt.title("L1 PAS 1 & 4: Classification Accuracy vs. Time")
+plt.xlabel("Time (ms)")
+plt.ylabel("Accuracy")
+plt.show()
+```
+
 
 ##2.3) 
 Is pairwise classification of subjective experience possible? Any surprises in the classification accuracies, i.e. how does the classification score fore PAS 1 vs 4 compare to the classification score for PAS 1 vs 2?  
-```{python}
 
-```
-
+- Expect to see more of a difference between pas 1 and 4 then pas 1 and 2 but we don't. 
+- That the accuracy is only a little higher than chance maybe?
 
 
 
